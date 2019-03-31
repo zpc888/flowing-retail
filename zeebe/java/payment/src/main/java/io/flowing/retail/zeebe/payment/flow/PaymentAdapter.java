@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.zeebe.gateway.ZeebeClient;
-import io.zeebe.gateway.api.clients.JobClient;
-import io.zeebe.gateway.api.events.JobEvent;
-import io.zeebe.gateway.api.subscription.JobHandler;
-import io.zeebe.gateway.api.subscription.JobWorker;
+import io.zeebe.client.ZeebeClient;
+import io.zeebe.client.api.clients.JobClient;
+import io.zeebe.client.api.response.ActivatedJob;
+import io.zeebe.client.api.subscription.JobHandler;
+import io.zeebe.client.api.subscription.JobWorker;
 
 
 @Component
@@ -27,7 +27,7 @@ public class PaymentAdapter implements JobHandler {
   
   @PostConstruct
   public void subscribe() {
-    subscription = zeebe.jobClient().newWorker()
+    subscription = zeebe.newWorker()
       .jobType("retrieve-payment-z")
       .handler(this)
       .timeout(Duration.ofMinutes(1))
@@ -35,7 +35,7 @@ public class PaymentAdapter implements JobHandler {
   }
 
   @Override
-  public void handle(JobClient client, JobEvent job) {
+  public void handle(JobClient client, ActivatedJob job) {
     try {
       PaymentInput data = new ObjectMapper().readValue(job.getPayload(), PaymentInput.class);
       String traceId = data.getTraceId();    
@@ -48,7 +48,7 @@ public class PaymentAdapter implements JobHandler {
       throw new RuntimeException("Could not parse payload: " + e.getMessage(), e);
     }
 
-    client.newCompleteCommand(job).send().join();
+    client.newCompleteCommand(job.getKey()).send().join();
   }
 
   @PreDestroy

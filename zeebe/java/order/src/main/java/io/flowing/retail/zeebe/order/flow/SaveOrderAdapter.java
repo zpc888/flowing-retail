@@ -10,11 +10,12 @@ import org.springframework.stereotype.Component;
 
 import io.flowing.retail.zeebe.order.domain.Order;
 import io.flowing.retail.zeebe.order.persistence.OrderRepository;
-import io.zeebe.gateway.ZeebeClient;
-import io.zeebe.gateway.api.clients.JobClient;
-import io.zeebe.gateway.api.events.JobEvent;
-import io.zeebe.gateway.api.subscription.JobHandler;
-import io.zeebe.gateway.api.subscription.JobWorker;
+
+import io.zeebe.client.ZeebeClient;
+import io.zeebe.client.api.clients.JobClient;
+import io.zeebe.client.api.response.ActivatedJob;
+import io.zeebe.client.api.subscription.JobHandler;
+import io.zeebe.client.api.subscription.JobWorker;
 
 
 @Component
@@ -30,7 +31,7 @@ public class SaveOrderAdapter implements JobHandler {
   
   @PostConstruct
   public void subscribe() {
-    subscription = zeebe.jobClient().newWorker()
+    subscription = zeebe.newWorker()
       .jobType("save-order-z")
       .handler(this)
       .timeout(Duration.ofMinutes(1))
@@ -43,7 +44,7 @@ public class SaveOrderAdapter implements JobHandler {
   }
   
   @Override
-  public void handle(JobClient client, JobEvent job) {
+  public void handle(JobClient client, ActivatedJob job) {
     // read data
     OrderFlowContext context = OrderFlowContext.fromJson(job.getPayload());
     Order order = context.getOrder();
@@ -56,7 +57,7 @@ public class SaveOrderAdapter implements JobHandler {
     
      // done
     System.out.println("persisted order " + order.getId());
-    client.newCompleteCommand(job) //
+    client.newCompleteCommand(job.getKey()) //
       .payload(context.asJson()) //
       .send().join();
   }

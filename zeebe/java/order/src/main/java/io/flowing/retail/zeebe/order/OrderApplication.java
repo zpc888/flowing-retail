@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import io.zeebe.gateway.ZeebeClient;
+import io.zeebe.client.ZeebeClient;
 
 @SpringBootApplication
 public class OrderApplication {
@@ -12,10 +12,13 @@ public class OrderApplication {
   @Bean
   public ZeebeClient zeebe() {
     // Cannot yet use Spring Zeebe in current alpha
-    ZeebeClient zeebeClient = ZeebeClient.newClient();    
+    ZeebeClient zeebeClient = ZeebeClient
+            .newClientBuilder()
+            .brokerContactPoint("127.0.0.1:26500")
+            .build();
     
     // Trigger deployment
-    zeebeClient.workflowClient().newDeployCommand() //
+    zeebeClient.newDeployCommand() //
       .addResourceFromClasspath("order-zeebe.bpmn") //
       .send().join();
     

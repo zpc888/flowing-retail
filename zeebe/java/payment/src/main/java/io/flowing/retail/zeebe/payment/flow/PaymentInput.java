@@ -1,7 +1,8 @@
 package io.flowing.retail.zeebe.payment.flow;
 
 public class PaymentInput {
-  
+
+  private Object order;
   private String traceId;
   private String refId;
   private long amount;
@@ -25,4 +26,11 @@ public class PaymentInput {
     this.amount = amount;
   }
 
+  public Object getOrder() {
+    return order;
+  }
+
+  public void setOrder(Object order) {
+    this.order = order;
+  }
 }
